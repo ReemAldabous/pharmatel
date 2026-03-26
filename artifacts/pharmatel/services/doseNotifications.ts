@@ -4,6 +4,9 @@ import type { DoseSchedule, Prescription } from "@/models";
 
 const DOSE_PREFIX = "pharmatel-dose-";
 const ANDROID_CHANNEL = "dose-reminders";
+const ANDROID_CATEGORY = "dose_reminder";
+const ACTION_TAKEN = "TAKEN";
+const ACTION_IGNORE = "IGNORE";
 
 const WEEKDAY_NAME_TO_EXPO: Record<string, number> = {
   sunday: 1,
@@ -58,10 +61,26 @@ async function ensureAndroidChannel() {
   if (Platform.OS !== "android") return;
   await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL, {
     name: "Medication reminders",
-    importance: Notifications.AndroidImportance.HIGH,
+    importance: Notifications.AndroidImportance.MAX,
     vibrationPattern: [0, 250, 250, 250],
     lightColor: "#0d9488",
   });
+}
+
+async function ensureAndroidCategory() {
+  if (Platform.OS !== "android") return;
+  await Notifications.setNotificationCategoryAsync(ANDROID_CATEGORY, [
+    {
+      identifier: ACTION_TAKEN,
+      buttonTitle: "أخذت الدواء",
+      options: { opensAppToForeground: false },
+    },
+    {
+      identifier: ACTION_IGNORE,
+      buttonTitle: "تجاهل",
+      options: { opensAppToForeground: false, isDestructive: true },
+    },
+  ]);
 }
 
 export async function cancelAllDoseNotifications(): Promise<void> {
@@ -91,6 +110,7 @@ export async function syncDoseReminderNotifications(prescriptions: Prescription[
     if (finalStatus !== "granted") return;
 
     await ensureAndroidChannel();
+    await ensureAndroidCategory();
     await cancelAllDoseNotifications();
 
     for (const rx of prescriptions) {
@@ -114,7 +134,9 @@ async function scheduleForDose(rx: Prescription, ds: DoseSchedule) {
     body,
     data: { prescriptionId: rx.id, doseScheduleId: ds.id },
     sound: true as const,
-    ...(Platform.OS === "android" ? { channelId: ANDROID_CHANNEL } : {}),
+    ...(Platform.OS === "android"
+      ? { channelId: ANDROID_CHANNEL, categoryIdentifier: ANDROID_CATEGORY }
+      : {}),
   };
 
   const rawDays = ds.dayOfWeek?.map((d) => WEEKDAY_NAME_TO_EXPO[d.trim().toLowerCase()]);
