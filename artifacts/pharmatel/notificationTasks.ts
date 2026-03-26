@@ -21,6 +21,36 @@ function getDoseData(payload: unknown): DoseNotificationData {
   return {};
 }
 
+export async function handleDoseNotificationAction(
+  response: Pick<Notifications.NotificationResponse, "actionIdentifier" | "notification">,
+) {
+  const actionIdentifier = response.actionIdentifier;
+  const notificationId = response.notification.request.identifier;
+  const doseData = getDoseData(response.notification.request.content.data);
+  if (!doseData.prescriptionId || !doseData.doseScheduleId) return false;
+
+  if (actionIdentifier === ACTION_TAKEN) {
+    await updateDoseSchedule(doseData.prescriptionId, doseData.doseScheduleId, {
+      status: "taken",
+      takenAt: new Date().toISOString(),
+    });
+    await Notifications.dismissNotificationAsync(notificationId);
+    return true;
+  }
+
+  if (actionIdentifier === ACTION_IGNORE) {
+    await updateDoseSchedule(doseData.prescriptionId, doseData.doseScheduleId, {
+      status: "skipped",
+      takenAt: undefined,
+      patientNote: "Ignored from notification",
+    });
+    await Notifications.dismissNotificationAsync(notificationId);
+    return true;
+  }
+
+  return false;
+}
+
 TaskManager.defineTask<Notifications.NotificationTaskPayload>(
   DOSE_NOTIFICATION_TASK,
   async ({
@@ -36,19 +66,7 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(
   // On Android, action button presses can be delivered here as a NotificationResponse-like payload.
   if (typeof data === "object" && "actionIdentifier" in data) {
     const response = data as unknown as Notifications.NotificationResponse;
-    const actionIdentifier = response.actionIdentifier;
-
-    if (actionIdentifier === ACTION_TAKEN) {
-      const doseData = getDoseData(response.notification.request.content.data);
-      if (!doseData.prescriptionId || !doseData.doseScheduleId) return;
-
-      await updateDoseSchedule(doseData.prescriptionId, doseData.doseScheduleId, {
-        status: "taken",
-        takenAt: new Date().toISOString(),
-      });
-    }
-
-    // ACTION_IGNORE is intentionally a no-op.
+    await handleDoseNotificationAction(response);
     return;
   }
   },

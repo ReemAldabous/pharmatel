@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
 import React, {
   createContext,
   useCallback,
@@ -33,6 +34,7 @@ import {
   cancelAllDoseNotifications,
   syncDoseReminderNotifications,
 } from "@/services/doseNotifications";
+import { handleDoseNotificationAction } from "@/notificationTasks";
 
 interface AppContextValue {
   patient: Patient | null;
@@ -77,6 +79,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated) return;
     void syncDoseReminderNotifications(prescriptions);
   }, [isAuthenticated, prescriptions]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const applyAction = async (response: Notifications.NotificationResponse) => {
+      const handled = await handleDoseNotificationAction(response);
+      if (handled) {
+        const rxs = await getPrescriptions();
+        setPrescriptions(rxs);
+      }
+    };
+
+    void Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response) void applyAction(response);
+    });
+
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      void applyAction(response);
+    });
+
+    return () => sub.remove();
+  }, [isAuthenticated]);
 
   const loadData = async () => {
     const [rxs, sessions, entries] = await Promise.all([

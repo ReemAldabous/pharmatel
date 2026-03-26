@@ -61,9 +61,13 @@ async function ensureAndroidChannel() {
   if (Platform.OS !== "android") return;
   await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL, {
     name: "Medication reminders",
+    description: "PharmaTel dose alarms",
     importance: Notifications.AndroidImportance.MAX,
-    vibrationPattern: [0, 250, 250, 250],
+    vibrationPattern: [0, 400, 250, 400, 250, 500],
     lightColor: "#0d9488",
+    enableVibrate: true,
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+    showBadge: true,
   });
 }
 
@@ -130,12 +134,18 @@ async function scheduleForDose(rx: Prescription, ds: DoseSchedule) {
 
   const body = `${rx.medicine.name} · ${rx.dose}`;
   const baseContent = {
-    title: "Medication reminder",
+    title: "💊 وقت الجرعة",
+    subtitle: "PharmaTel reminder",
     body,
     data: { prescriptionId: rx.id, doseScheduleId: ds.id },
     sound: true as const,
     ...(Platform.OS === "android"
-      ? { channelId: ANDROID_CHANNEL, categoryIdentifier: ANDROID_CATEGORY }
+      ? {
+          channelId: ANDROID_CHANNEL,
+          categoryIdentifier: ANDROID_CATEGORY,
+          color: "#0d9488",
+          priority: Notifications.AndroidNotificationPriority.MAX,
+        }
       : {}),
   };
 
