@@ -34,7 +34,10 @@ import {
   cancelAllDoseNotifications,
   syncDoseReminderNotifications,
 } from "@/services/doseNotifications";
-import { handleDoseNotificationAction } from "@/notificationTasks";
+import { 
+  handleDoseNotificationAction,
+  setIncomingDoseNotification,
+} from "@/notificationTasks";
 
 interface AppContextValue {
   patient: Patient | null;
@@ -43,6 +46,12 @@ interface AppContextValue {
   prescriptions: Prescription[];
   observationSessions: ObservationSession[];
   diaryEntries: DiaryEntry[];
+  currentDoseNotification: {
+    notification: Notifications.Notification;
+    prescriptionId: string;
+    doseScheduleId: string;
+  } | null;
+  dismissDoseNotification: () => void;
   login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   markDoseTaken: (
@@ -70,6 +79,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [observationSessions, setObservationSessions] = useState<ObservationSession[]>([]);
   const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
+  const [currentDoseNotification, setCurrentDoseNotification] = useState<{
+    notification: Notifications.Notification;
+    prescriptionId: string;
+    doseScheduleId: string;
+  } | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -84,22 +98,70 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated) return;
 
     const applyAction = async (response: Notifications.NotificationResponse) => {
+      console.log("Notification response received:", response);
+      const data = response.notification.request.content.data;
+      if (data && typeof data === "object" && "prescriptionId" in data && "doseScheduleId" in data) {
+        const prescriptionId = data.prescriptionId as string;
+        const doseScheduleId = data.doseScheduleId as string;
+        console.log("Setting current dose notification from response for:", prescriptionId, doseScheduleId);
+        setCurrentDoseNotification({
+          notification: response.notification,
+          prescriptionId,
+          doseScheduleId,
+        });
+        setIncomingDoseNotification({
+          notification: response.notification,
+          prescriptionId,
+          doseScheduleId,
+        });
+      }
       const handled = await handleDoseNotificationAction(response);
       if (handled) {
         const rxs = await getPrescriptions();
         setPrescriptions(rxs);
+        setCurrentDoseNotification(null);
+      }
+    };
+
+    const handleForegroundNotification = async (notification: Notifications.Notification) => {
+      console.log("Foreground notification received:", notification);
+      const data = notification.request.content.data;
+      if (data && typeof data === "object" && "prescriptionId" in data && "doseScheduleId" in data) {
+        const prescriptionId = data.prescriptionId as string;
+        const doseScheduleId = data.doseScheduleId as string;
+        console.log("Setting current dose notification for:", prescriptionId, doseScheduleId);
+        setCurrentDoseNotification({
+          notification,
+          prescriptionId,
+          doseScheduleId,
+        });
+        setIncomingDoseNotification({
+          notification,
+          prescriptionId,
+          doseScheduleId,
+        });
       }
     };
 
     void Notifications.getLastNotificationResponseAsync().then((response) => {
-      if (response) void applyAction(response);
+      if (response) {
+        console.log("Last notification response:", response);
+        void applyAction(response);
+      }
     });
 
-    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+    const notificationSub = Notifications.addNotificationReceivedListener((notification) => {
+      void handleForegroundNotification(notification);
+    });
+
+    const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
       void applyAction(response);
     });
 
-    return () => sub.remove();
+    return () => {
+      notificationSub.remove();
+      responseSub.remove();
+    };
   }, [isAuthenticated]);
 
   const loadData = async () => {
@@ -207,6 +269,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setPrescriptions(updated);
   }, []);
 
+  const dismissDoseNotification = useCallback(() => {
+    setCurrentDoseNotification(null);
+    setIncomingDoseNotification(null);
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -216,6 +283,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         prescriptions,
         observationSessions,
         diaryEntries,
+        currentDoseNotification,
+        dismissDoseNotification,
         login,
         logout,
         markDoseTaken,

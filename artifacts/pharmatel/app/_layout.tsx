@@ -15,6 +15,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import "@/notificationTasks";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { DoseAlertModal } from "@/components/DoseAlertModal";
 import { AppProvider } from "@/context/AppContext";
 
 SplashScreen.preventAutoHideAsync();
@@ -108,6 +109,7 @@ export default function RootLayout() {
             <GestureHandlerRootView>
               <KeyboardProvider>
                 <RootLayoutNav />
+                <DoseAlertModal />
               </KeyboardProvider>
             </GestureHandlerRootView>
           </AppProvider>

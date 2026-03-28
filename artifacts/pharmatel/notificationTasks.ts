@@ -6,6 +6,21 @@ const DOSE_NOTIFICATION_TASK = "DOSE_NOTIFICATION_TASK";
 const ACTION_TAKEN = "TAKEN";
 const ACTION_IGNORE = "IGNORE";
 
+// Store for in-app modal display
+export let incomingDoseNotification: {
+  notification: Notifications.Notification;
+  prescriptionId: string;
+  doseScheduleId: string;
+} | null = null;
+
+export function setIncomingDoseNotification(notification: {
+  notification: Notifications.Notification;
+  prescriptionId: string;
+  doseScheduleId: string;
+} | null) {
+  incomingDoseNotification = notification;
+}
+
 type DoseNotificationData = {
   prescriptionId?: string;
   doseScheduleId?: string;

@@ -21,10 +21,10 @@ const WEEKDAY_NAME_TO_EXPO: Record<string, number> = {
 if (Platform.OS !== "web") {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
-      shouldShowBanner: true,
+      shouldShowBanner: false,
       shouldShowList: true,
       shouldPlaySound: true,
-      shouldSetBadge: false,
+      shouldSetBadge: true,
     }),
   });
 }
@@ -101,7 +101,9 @@ export async function cancelAllDoseNotifications(): Promise<void> {
   }
 }
 
-export async function syncDoseReminderNotifications(prescriptions: Prescription[]): Promise<void> {
+export async function syncDoseReminderNotifications(
+  prescriptions: Prescription[],
+): Promise<void> {
   if (Platform.OS === "web") return;
 
   try {
@@ -142,14 +144,15 @@ async function scheduleForDose(rx: Prescription, ds: DoseSchedule) {
     ...(Platform.OS === "android"
       ? {
           channelId: ANDROID_CHANNEL,
-          categoryIdentifier: ANDROID_CATEGORY,
           color: "#0d9488",
           priority: Notifications.AndroidNotificationPriority.MAX,
         }
       : {}),
   };
 
-  const rawDays = ds.dayOfWeek?.map((d) => WEEKDAY_NAME_TO_EXPO[d.trim().toLowerCase()]);
+  const rawDays = ds.dayOfWeek?.map(
+    (d) => WEEKDAY_NAME_TO_EXPO[d.trim().toLowerCase()],
+  );
   const days = rawDays?.filter((w): w is number => typeof w === "number");
 
   if (days && days.length > 0) {

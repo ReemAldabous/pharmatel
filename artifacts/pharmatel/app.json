@@ -23,7 +23,9 @@
         "NSUserNotificationsUsageDescription": "PharmaTel uses notifications to remind you when to take your medications."
       }
     },
-    "android": {},
+    "android": {
+      "package": "com.anonymous.pharmatel"
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },
