@@ -18,7 +18,8 @@ const ACTION_TAKEN = "TAKEN";
 const ACTION_IGNORE = "IGNORE";
 
 export function DoseAlertModal() {
-  const { currentDoseNotification, dismissDoseNotification, prescriptions } = useApp();
+  const { currentDoseNotification, dismissDoseNotification, prescriptions } =
+    useApp();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
@@ -31,26 +32,38 @@ export function DoseAlertModal() {
     (ds) => ds.id === notification?.doseScheduleId,
   );
 
-  const handleAction = async (action: typeof ACTION_TAKEN | typeof ACTION_IGNORE) => {
+  const handleAction = async (
+    action: typeof ACTION_TAKEN | typeof ACTION_IGNORE,
+  ) => {
     if (!notification) return;
 
     try {
       if (action === ACTION_TAKEN) {
-        await updateDoseSchedule(notification.prescriptionId, notification.doseScheduleId, {
-          status: "taken",
-          takenAt: new Date().toISOString(),
-        });
+        await updateDoseSchedule(
+          notification.prescriptionId,
+          notification.doseScheduleId,
+          {
+            status: "taken",
+            takenAt: new Date().toISOString(),
+          },
+        );
         Alert.alert("نجح", "تم تسجيل الجرعة بنجاح");
       } else if (action === ACTION_IGNORE) {
-        await updateDoseSchedule(notification.prescriptionId, notification.doseScheduleId, {
-          status: "skipped",
-          takenAt: undefined,
-          patientNote: "تم تجاهل الإشعار",
-        });
+        await updateDoseSchedule(
+          notification.prescriptionId,
+          notification.doseScheduleId,
+          {
+            status: "skipped",
+            takenAt: undefined,
+            patientNote: "تم تجاهل الإشعار",
+          },
+        );
         Alert.alert("تم التجاهل", "تم تجاهل هذه الجرعة");
       }
 
-      await Notifications.dismissNotificationAsync(notification.notification.request.identifier);
+      await Notifications.dismissNotificationAsync(
+        notification.notification.request.identifier,
+      );
       dismissDoseNotification();
     } catch (error) {
       console.error("Error handling dose action:", error);
@@ -77,7 +90,12 @@ export function DoseAlertModal() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <View style={[styles.iconCircle, { backgroundColor: colors.primary + "20" }]}>
+            <View
+              style={[
+                styles.iconCircle,
+                { backgroundColor: colors.primary + "20" },
+              ]}
+            >
               <Feather name="droplet" size={32} color={colors.primary} />
             </View>
             <TouchableOpacity
@@ -103,7 +121,12 @@ export function DoseAlertModal() {
                 {prescription.medicine.name}
               </Text>
 
-              <Text style={[styles.label, { color: colors.textSecondary, marginTop: 12 }]}>
+              <Text
+                style={[
+                  styles.label,
+                  { color: colors.textSecondary, marginTop: 12 },
+                ]}
+              >
                 الجرعة
               </Text>
               <Text style={[styles.value, { color: colors.text }]}>
@@ -112,7 +135,12 @@ export function DoseAlertModal() {
 
               {doseSchedule?.scheduledTime && (
                 <>
-                  <Text style={[styles.label, { color: colors.textSecondary, marginTop: 12 }]}>
+                  <Text
+                    style={[
+                      styles.label,
+                      { color: colors.textSecondary, marginTop: 12 },
+                    ]}
+                  >
                     الوقت المجدول
                   </Text>
                   <Text style={[styles.value, { color: colors.text }]}>
@@ -129,12 +157,20 @@ export function DoseAlertModal() {
               style={[
                 styles.button,
                 styles.ignoreButton,
-                { borderColor: colors.error, backgroundColor: colors.error + "10" },
+                {
+                  borderColor: colors.error,
+                  backgroundColor: colors.error + "10",
+                },
               ]}
               onPress={() => handleAction(ACTION_IGNORE)}
             >
               <Feather name="x" size={20} color={colors.error} />
-              <Text style={[styles.buttonText, { color: colors.error, marginLeft: 8 }]}>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { color: colors.error, marginLeft: 8 },
+                ]}
+              >
                 تجاهل
               </Text>
             </TouchableOpacity>
@@ -148,7 +184,9 @@ export function DoseAlertModal() {
               onPress={() => handleAction(ACTION_TAKEN)}
             >
               <Feather name="check" size={20} color="#fff" />
-              <Text style={[styles.buttonText, { color: "#fff", marginLeft: 8 }]}>
+              <Text
+                style={[styles.buttonText, { color: "#fff", marginLeft: 8 }]}
+              >
                 أخذت الدواء
               </Text>
             </TouchableOpacity>

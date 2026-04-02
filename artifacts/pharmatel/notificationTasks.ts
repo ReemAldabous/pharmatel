@@ -13,11 +13,13 @@ export let incomingDoseNotification: {
   doseScheduleId: string;
 } | null = null;
 
-export function setIncomingDoseNotification(notification: {
-  notification: Notifications.Notification;
-  prescriptionId: string;
-  doseScheduleId: string;
-} | null) {
+export function setIncomingDoseNotification(
+  notification: {
+    notification: Notifications.Notification;
+    prescriptionId: string;
+    doseScheduleId: string;
+  } | null,
+) {
   incomingDoseNotification = notification;
 }
 
@@ -29,15 +31,20 @@ type DoseNotificationData = {
 function getDoseData(payload: unknown): DoseNotificationData {
   if (payload && typeof payload === "object") {
     const p = payload as Record<string, unknown>;
-    const prescriptionId = typeof p.prescriptionId === "string" ? p.prescriptionId : undefined;
-    const doseScheduleId = typeof p.doseScheduleId === "string" ? p.doseScheduleId : undefined;
+    const prescriptionId =
+      typeof p.prescriptionId === "string" ? p.prescriptionId : undefined;
+    const doseScheduleId =
+      typeof p.doseScheduleId === "string" ? p.doseScheduleId : undefined;
     return { prescriptionId, doseScheduleId };
   }
   return {};
 }
 
 export async function handleDoseNotificationAction(
-  response: Pick<Notifications.NotificationResponse, "actionIdentifier" | "notification">,
+  response: Pick<
+    Notifications.NotificationResponse,
+    "actionIdentifier" | "notification"
+  >,
 ) {
   const actionIdentifier = response.actionIdentifier;
   const notificationId = response.notification.request.identifier;
@@ -75,17 +82,16 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(
     data?: Notifications.NotificationTaskPayload;
     error?: unknown;
   }) => {
-  if (error) return;
-  if (!data) return;
+    if (error) return;
+    if (!data) return;
 
-  // On Android, action button presses can be delivered here as a NotificationResponse-like payload.
-  if (typeof data === "object" && "actionIdentifier" in data) {
-    const response = data as unknown as Notifications.NotificationResponse;
-    await handleDoseNotificationAction(response);
-    return;
-  }
+    // On Android, action button presses can be delivered here as a NotificationResponse-like payload.
+    if (typeof data === "object" && "actionIdentifier" in data) {
+      const response = data as unknown as Notifications.NotificationResponse;
+      await handleDoseNotificationAction(response);
+      return;
+    }
   },
 );
 
 void Notifications.registerTaskAsync(DOSE_NOTIFICATION_TASK);
-

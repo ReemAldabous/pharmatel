@@ -34,7 +34,7 @@ import {
   cancelAllDoseNotifications,
   syncDoseReminderNotifications,
 } from "@/services/doseNotifications";
-import { 
+import {
   handleDoseNotificationAction,
   setIncomingDoseNotification,
 } from "@/notificationTasks";
@@ -52,7 +52,10 @@ interface AppContextValue {
     doseScheduleId: string;
   } | null;
   dismissDoseNotification: () => void;
-  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (
+    username: string,
+    password: string,
+  ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   markDoseTaken: (
     prescriptionId: string,
@@ -61,7 +64,9 @@ interface AppContextValue {
   ) => Promise<void>;
   refreshPrescriptions: () => Promise<void>;
   saveObservation: (session: ObservationSession) => Promise<void>;
-  getSessionForDose: (doseScheduleId: string) => Promise<ObservationSession | null>;
+  getSessionForDose: (
+    doseScheduleId: string,
+  ) => Promise<ObservationSession | null>;
   symptomDefinitions: typeof MOCK_SYMPTOM_DEFINITIONS;
   addDiaryEntry: (entry: DiaryEntry) => Promise<void>;
   updateDiaryEntry: (entry: DiaryEntry) => Promise<void>;
@@ -77,7 +82,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
-  const [observationSessions, setObservationSessions] = useState<ObservationSession[]>([]);
+  const [observationSessions, setObservationSessions] = useState<
+    ObservationSession[]
+  >([]);
   const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
   const [currentDoseNotification, setCurrentDoseNotification] = useState<{
     notification: Notifications.Notification;
@@ -97,13 +104,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const applyAction = async (response: Notifications.NotificationResponse) => {
+    const applyAction = async (
+      response: Notifications.NotificationResponse,
+    ) => {
       console.log("Notification response received:", response);
       const data = response.notification.request.content.data;
-      if (data && typeof data === "object" && "prescriptionId" in data && "doseScheduleId" in data) {
+      if (
+        data &&
+        typeof data === "object" &&
+        "prescriptionId" in data &&
+        "doseScheduleId" in data
+      ) {
         const prescriptionId = data.prescriptionId as string;
         const doseScheduleId = data.doseScheduleId as string;
-        console.log("Setting current dose notification from response for:", prescriptionId, doseScheduleId);
+        console.log(
+          "Setting current dose notification from response for:",
+          prescriptionId,
+          doseScheduleId,
+        );
         setCurrentDoseNotification({
           notification: response.notification,
           prescriptionId,
@@ -123,13 +141,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    const handleForegroundNotification = async (notification: Notifications.Notification) => {
+    const handleForegroundNotification = async (
+      notification: Notifications.Notification,
+    ) => {
       console.log("Foreground notification received:", notification);
       const data = notification.request.content.data;
-      if (data && typeof data === "object" && "prescriptionId" in data && "doseScheduleId" in data) {
+      if (
+        data &&
+        typeof data === "object" &&
+        "prescriptionId" in data &&
+        "doseScheduleId" in data
+      ) {
         const prescriptionId = data.prescriptionId as string;
         const doseScheduleId = data.doseScheduleId as string;
-        console.log("Setting current dose notification for:", prescriptionId, doseScheduleId);
+        console.log(
+          "Setting current dose notification for:",
+          prescriptionId,
+          doseScheduleId,
+        );
         setCurrentDoseNotification({
           notification,
           prescriptionId,
@@ -150,13 +179,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    const notificationSub = Notifications.addNotificationReceivedListener((notification) => {
-      void handleForegroundNotification(notification);
-    });
+    const notificationSub = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        void handleForegroundNotification(notification);
+      },
+    );
 
-    const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
-      void applyAction(response);
-    });
+    const responseSub = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        void applyAction(response);
+      },
+    );
 
     return () => {
       notificationSub.remove();
@@ -221,7 +254,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         takenAt: new Date().toISOString(),
         patientNote: note,
       };
-      const updated = await updateDoseSchedule(prescriptionId, doseScheduleId, updates);
+      const updated = await updateDoseSchedule(
+        prescriptionId,
+        doseScheduleId,
+        updates,
+      );
       setPrescriptions(updated);
     },
     [],
@@ -259,10 +296,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setDiaryEntries((prev) => prev.filter((e) => e.id !== entryId));
   }, []);
 
-  const addUserPrescription = useCallback(async (prescription: Prescription) => {
-    const updated = await addPrescription(prescription);
-    setPrescriptions(updated);
-  }, []);
+  const addUserPrescription = useCallback(
+    async (prescription: Prescription) => {
+      const updated = await addPrescription(prescription);
+      setPrescriptions(updated);
+    },
+    [],
+  );
 
   const deleteUserPrescription = useCallback(async (prescriptionId: string) => {
     const updated = await removePrescription(prescriptionId);
