@@ -26,6 +26,7 @@ import {
   logout as logoutService,
   MOCK_SYMPTOM_DEFINITIONS,
   removePrescription,
+  signUp as signUpService,
   saveObservationSession,
   saveDiaryEntry,
   updateDoseSchedule,
@@ -56,6 +57,21 @@ interface AppContextValue {
     username: string,
     password: string,
   ) => Promise<{ success: boolean; error?: string }>;
+  signUp: (payload: {
+    username: string;
+    password: string;
+    name: string;
+    email: string;
+    phoneNumber: string;
+  }) => Promise<{
+    success: boolean;
+    token?: string;
+    username?: string;
+    role?: "PATIENT";
+    patientId?: number;
+    pharmacyId?: number | null;
+    error?: string;
+  }>;
   logout: () => Promise<void>;
   markDoseTaken: (
     prescriptionId: string,
@@ -237,6 +253,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return result;
   }, []);
 
+  const signUp = useCallback(
+    async (payload: {
+      username: string;
+      password: string;
+      name: string;
+      email: string;
+      phoneNumber: string;
+    }) => {
+      const result = await signUpService(payload);
+      if (result.success) {
+        const patientStr = await AsyncStorage.getItem("patient");
+        if (patientStr) setPatient(JSON.parse(patientStr));
+        setIsAuthenticated(true);
+        await loadData();
+      }
+      return result;
+    },
+    [],
+  );
+
   const logout = useCallback(async () => {
     await cancelAllDoseNotifications();
     await logoutService();
@@ -326,6 +362,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         currentDoseNotification,
         dismissDoseNotification,
         login,
+        signUp,
         logout,
         markDoseTaken,
         refreshPrescriptions,

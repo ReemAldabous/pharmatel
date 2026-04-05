@@ -1,5 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { DiaryEntry, DoseSchedule, ObservationSession, Prescription } from "@/models";
+import type {
+  DiaryEntry,
+  DoseSchedule,
+  ObservationSession,
+  Prescription,
+} from "@/models";
 import {
   MOCK_OBSERVATION_SESSIONS,
   MOCK_PATIENT,
@@ -13,6 +18,22 @@ const KEYS = {
   PRESCRIPTIONS: "prescriptions",
   OBSERVATION_SESSIONS: "observation_sessions",
   DIARY_ENTRIES: "diary_entries",
+};
+
+const MOCK_SIGN_UP_REQUEST = {
+  username: "john",
+  password: "pass123",
+  name: "John Doe",
+  email: "john@example.com",
+  phoneNumber: "+15550001",
+};
+
+const MOCK_SIGN_UP_RESPONSE = {
+  token: "mock_token_patient_4",
+  username: "reem",
+  role: "PATIENT" as const,
+  patientId: 4,
+  pharmacyId: null as number | null,
 };
 
 export async function saveAuthToken(token: string): Promise<void> {
@@ -41,6 +62,63 @@ export async function login(
   return { success: false, error: "Invalid username or password" };
 }
 
+export async function signUp(payload: {
+  username: string;
+  password: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+}): Promise<{
+  success: boolean;
+  token?: string;
+  username?: string;
+  role?: "PATIENT";
+  patientId?: number;
+  pharmacyId?: number | null;
+  error?: string;
+}> {
+  await new Promise((r) => setTimeout(r, 900));
+
+  const matchesMockRequest =
+    payload.username === MOCK_SIGN_UP_REQUEST.username &&
+    payload.password === MOCK_SIGN_UP_REQUEST.password &&
+    payload.name === MOCK_SIGN_UP_REQUEST.name &&
+    payload.email === MOCK_SIGN_UP_REQUEST.email &&
+    payload.phoneNumber === MOCK_SIGN_UP_REQUEST.phoneNumber;
+
+  if (!matchesMockRequest) {
+    return {
+      success: false,
+      error: "Invalid sign up payload",
+    };
+  }
+
+  await saveAuthToken(MOCK_SIGN_UP_RESPONSE.token);
+  await AsyncStorage.setItem(
+    KEYS.PATIENT,
+    JSON.stringify({
+      ...MOCK_PATIENT,
+      username: MOCK_SIGN_UP_RESPONSE.username,
+      name: payload.name,
+      email: payload.email,
+      phoneNumber: payload.phoneNumber,
+      role: MOCK_SIGN_UP_RESPONSE.role,
+      patientId: MOCK_SIGN_UP_RESPONSE.patientId,
+      pharmacyId: MOCK_SIGN_UP_RESPONSE.pharmacyId,
+      token: MOCK_SIGN_UP_RESPONSE.token,
+    }),
+  );
+
+  return {
+    success: true,
+    token: MOCK_SIGN_UP_RESPONSE.token,
+    username: MOCK_SIGN_UP_RESPONSE.username,
+    role: MOCK_SIGN_UP_RESPONSE.role,
+    patientId: MOCK_SIGN_UP_RESPONSE.patientId,
+    pharmacyId: MOCK_SIGN_UP_RESPONSE.pharmacyId,
+  };
+}
+
 export async function logout(): Promise<void> {
   await AsyncStorage.multiRemove([KEYS.AUTH_TOKEN, KEYS.PATIENT]);
 }
@@ -48,7 +126,10 @@ export async function logout(): Promise<void> {
 export async function getPrescriptions(): Promise<Prescription[]> {
   const stored = await AsyncStorage.getItem(KEYS.PRESCRIPTIONS);
   if (stored) return JSON.parse(stored);
-  await AsyncStorage.setItem(KEYS.PRESCRIPTIONS, JSON.stringify(MOCK_PRESCRIPTIONS));
+  await AsyncStorage.setItem(
+    KEYS.PRESCRIPTIONS,
+    JSON.stringify(MOCK_PRESCRIPTIONS),
+  );
   return MOCK_PRESCRIPTIONS;
 }
 
@@ -74,16 +155,24 @@ export async function updateDoseSchedule(
 export async function getObservationSessions(): Promise<ObservationSession[]> {
   const stored = await AsyncStorage.getItem(KEYS.OBSERVATION_SESSIONS);
   if (stored) return JSON.parse(stored);
-  await AsyncStorage.setItem(KEYS.OBSERVATION_SESSIONS, JSON.stringify(MOCK_OBSERVATION_SESSIONS));
+  await AsyncStorage.setItem(
+    KEYS.OBSERVATION_SESSIONS,
+    JSON.stringify(MOCK_OBSERVATION_SESSIONS),
+  );
   return MOCK_OBSERVATION_SESSIONS;
 }
 
-export async function saveObservationSession(session: ObservationSession): Promise<void> {
+export async function saveObservationSession(
+  session: ObservationSession,
+): Promise<void> {
   const sessions = await getObservationSessions();
   const idx = sessions.findIndex((s) => s.id === session.id);
   if (idx >= 0) sessions[idx] = session;
   else sessions.push(session);
-  await AsyncStorage.setItem(KEYS.OBSERVATION_SESSIONS, JSON.stringify(sessions));
+  await AsyncStorage.setItem(
+    KEYS.OBSERVATION_SESSIONS,
+    JSON.stringify(sessions),
+  );
 }
 
 export async function getObservationSessionByDose(
@@ -93,14 +182,18 @@ export async function getObservationSessionByDose(
   return sessions.find((s) => s.doseScheduleId === doseScheduleId) ?? null;
 }
 
-export async function addPrescription(prescription: Prescription): Promise<Prescription[]> {
+export async function addPrescription(
+  prescription: Prescription,
+): Promise<Prescription[]> {
   const prescriptions = await getPrescriptions();
   prescriptions.unshift(prescription);
   await AsyncStorage.setItem(KEYS.PRESCRIPTIONS, JSON.stringify(prescriptions));
   return prescriptions;
 }
 
-export async function removePrescription(prescriptionId: string): Promise<Prescription[]> {
+export async function removePrescription(
+  prescriptionId: string,
+): Promise<Prescription[]> {
   const prescriptions = await getPrescriptions();
   const updated = prescriptions.filter((rx) => rx.id !== prescriptionId);
   await AsyncStorage.setItem(KEYS.PRESCRIPTIONS, JSON.stringify(updated));

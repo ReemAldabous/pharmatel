@@ -140,9 +140,9 @@ export default function WelcomeScreen() {
     >
       {/* Hero Section with Premium Design */}
       <LinearGradient
-        colors={[colors.primary, "#4F46E5", "#7C3AED", colors.secondary]}
+        colors={["#0B4FD6", "#2A6BFF", "#4D8DFF", "#77ADFF"]}
         start={{ x: 0, y: 0 }}
-        end={{ x:1, y: 1 }}
+        end={{ x: 1, y: 1 }}
         style={[styles.hero, { paddingTop: insets.top + 20 }]}
       >
         {/* Animated Background Elements */}
@@ -306,7 +306,7 @@ export default function WelcomeScreen() {
             styles.premiumCard,
             {
               backgroundColor: colors.surface,
-              borderColor: "#4F46E5" + "30",
+              borderColor: "#86b8dc" + "30",
               opacity: fadeAnim,
               transform: [
                 {
@@ -320,7 +320,7 @@ export default function WelcomeScreen() {
           ]}
         >
           <LinearGradient
-            colors={["#4F46E5" + "20", "#4F46E5" + "10", "#4F46E5" + "05"]}
+            colors={["#4F46E5" + "20", "#7873d8" + "10", "#4F46E5" + "05"]}
             style={styles.featureIconContainer}
           >
             <Feather name="activity" size={32} color="#4F46E5" />
@@ -348,7 +348,7 @@ export default function WelcomeScreen() {
             styles.premiumCard,
             {
               backgroundColor: colors.surface,
-              borderColor: "#7C3AED" + "30",
+              borderColor: "#4752d0" + "30",
               opacity: fadeAnim,
               transform: [
                 {
@@ -362,12 +362,12 @@ export default function WelcomeScreen() {
           ]}
         >
           <LinearGradient
-            colors={["#7C3AED" + "20", "#7C3AED" + "10", "#7C3AED" + "05"]}
+            colors={["#3a4de0" + "20", "#576fd7" + "10", "#5ea8c8" + "05"]}
             style={styles.featureIconContainer}
           >
-            <MaterialIcons name="location-on" size={32} color="#7C3AED" />
+            <MaterialIcons name="location-on" size={32} color="#7ca0ee" />
             <View
-              style={[styles.iconGlow, { backgroundColor: "#7C3AED" + "40" }]}
+              style={[styles.iconGlow, { backgroundColor: "#3d9fc6" + "40" }]}
             />
           </LinearGradient>
           <View style={styles.featureContent}>
@@ -379,7 +379,7 @@ export default function WelcomeScreen() {
               directions.
             </Text>
           </View>
-          <View style={[styles.featureBadge, { backgroundColor: "#7C3AED" }]}>
+          <View style={[styles.featureBadge, { backgroundColor: "#2e4cd0" }]}>
             <Text style={styles.badgeText}>GPS</Text>
           </View>
         </Animated.View>
@@ -400,7 +400,7 @@ export default function WelcomeScreen() {
           }}
         >
           <LinearGradient
-            colors={[colors.primary, "#4F46E5", colors.secondary]}
+            colors={["#0A4CCB", "#2F74FF", "#67A0FF"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.ctaGradient}
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     marginBottom: 3,
-    marginTop:0.1
+    marginTop: 0.1,
   },
   logoGlow: {
     borderRadius: 25,
@@ -592,14 +592,14 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   ctaButton: {
-    paddingVertical: 18,
+    paddingVertical: 14,
     alignItems: "center",
     justifyContent: "center",
   },
   ctaContent: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 6,
   },
   ctaText: {
     color: "#fff",
